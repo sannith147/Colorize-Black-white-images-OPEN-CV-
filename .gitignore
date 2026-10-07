@@ -1,0 +1,20 @@
+# Large model weights (exceeds GitHub 100MB file limit)
+# Note: Download colorization_release_v2.caffemodel automatically using app.py or direct link
+models/*.caffemodel
+*.caffemodel
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+venv/
+.venv/
+env/
+
+# OS / IDE generated files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

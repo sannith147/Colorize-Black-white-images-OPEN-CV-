@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deep Colorize AI — OpenCV Black & White Image Colorization</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="navbar">
+      <div class="brand">
+        <div class="logo-icon">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <div class="brand-text">
+          <h1>Deep Colorize AI</h1>
+          <span class="badge">OpenCV DNN &bull; Caffe</span>
+        </div>
+      </div>
+      <div class="model-status" id="modelStatus">
+        <span class="status-dot green"></span>
+        <span class="status-text">Caffe Model Ready</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="content">
+      <!-- Hero Section -->
+      <section class="hero">
+        <h2>Transform Black & White Images into Vivid Colors</h2>
+        <p>Powered by Richard Zhang et al. ECCV 2016 Deep Learning model in <strong>Lab Color Space</strong>.</p>
+      </section>
+
+      <!-- Upload & Workspace Area -->
+      <section class="workspace">
+        <!-- Upload Card -->
+        <div class="card upload-card" id="uploadArea">
+          <input type="file" id="fileInput" accept="image/*" class="file-input">
+          <div class="drop-zone" id="dropZone">
+            <div class="upload-icon">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <h3>Drag & Drop your B&W photo here</h3>
+            <p>Supports JPG, PNG, WEBP up to 20MB</p>
+            <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+              <i class="fa-solid fa-folder-open"></i> Browse File
+            </button>
+          </div>
+
+          <!-- Sample Images Selector -->
+          <div class="samples-wrapper">
+            <h4><i class="fa-solid fa-bolt"></i> Or try with sample images:</h4>
+            <div class="samples-grid" id="samplesGrid">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Processing Loader Overlay -->
+        <div class="card loader-card hidden" id="loaderCard">
+          <div class="spinner-wrapper">
+            <div class="spinner"></div>
+            <div class="pulse-ring"></div>
+          </div>
+          <h3 id="loaderStatus">Running Neural Network Inference...</h3>
+          <div class="steps-progress">
+            <div class="step active" id="step1"><i class="fa-solid fa-check"></i> Convert BGR &rarr; Lab</div>
+            <div class="step active" id="step2"><i class="fa-solid fa-spinner fa-spin"></i> Extract L Channel &amp; Resize 224&times;224</div>
+            <div class="step" id="step3"><i class="fa-solid fa-circle"></i> OpenCV DNN Forward Pass (313 ab bins)</div>
+            <div class="step" id="step4"><i class="fa-solid fa-circle"></i> Lab &rarr; BGR Reconstruct</div>
+          </div>
+        </div>
+
+        <!-- Result View Card (Split Screen Slider) -->
+        <div class="card result-card hidden" id="resultCard">
+          <div class="result-header">
+            <div class="view-controls">
+              <button class="btn btn-tab active" id="btnCompare"><i class="fa-solid fa-sliders"></i> Split Slider</button>
+              <button class="btn btn-tab" id="btnColorized"><i class="fa-solid fa-image"></i> Colorized Only</button>
+              <button class="btn btn-tab" id="btnOriginal"><i class="fa-solid fa-circle-half-stroke"></i> Original B&amp;W</button>
+            </div>
+            <div class="action-buttons">
+              <button class="btn btn-secondary" onclick="resetWorkspace()"><i class="fa-solid fa-rotate-left"></i> New Image</button>
+              <a id="downloadBtn" class="btn btn-success" download="colorized_result.jpg"><i class="fa-solid fa-download"></i> Download Image</a>
+            </div>
+          </div>
+
+          <!-- Image Comparison Container -->
+          <div class="comparison-container" id="comparisonContainer">
+            <!-- Original Image (Grayscale) -->
+            <img id="imgOriginal" class="comp-img img-under" alt="Original Black and White">
+            
+            <!-- Colorized Image (Overlaid & Clipped) -->
+            <div class="comp-img-wrapper" id="colorizedWrapper">
+              <img id="imgColorized" class="comp-img img-over" alt="Colorized Result">
+            </div>
+
+            <!-- Drag Slider Handle -->
+            <div class="slider-handle" id="sliderHandle">
+              <div class="handle-line"></div>
+              <div class="handle-circle">
+                <i class="fa-solid fa-arrows-left-right"></i>
+              </div>
+              <div class="handle-line"></div>
+            </div>
+
+            <!-- Labels -->
+            <span class="label label-left">Original B&amp;W</span>
+            <span class="label label-right">Colorized AI</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Technical Architecture Section -->
+      <section class="tech-section">
+        <div class="section-title">
+          <h3><i class="fa-solid fa-brain"></i> How Lab Color Space AI Works</h3>
+          <p>Understanding the deep learning pipeline behind Zhang et al. ECCV 2016</p>
+        </div>
+
+        <div class="tech-grid">
+          <div class="tech-card">
+            <div class="tech-icon"><i class="fa-solid fa-sun"></i></div>
+            <h4>1. L-Channel Extraction</h4>
+            <p>The input B&W image represents the <strong>L (Lightness)</strong> channel. It is separated and scaled to 224&times;224 resolution for the neural network input.</p>
+          </div>
+
+          <div class="tech-card">
+            <div class="tech-icon"><i class="fa-solid fa-network-wired"></i></div>
+            <h4>2. Caffe DNN Forward Pass</h4>
+            <p>An 8-block convolutional architecture predicts a probability distribution over <strong>313 quantized color bins</strong> in the <code>ab</code> chrominance space.</p>
+          </div>
+
+          <div class="tech-card">
+            <div class="tech-icon"><i class="fa-solid fa-palette"></i></div>
+            <h4>3. Chrominance Fusion &amp; Lab &rarr; BGR</h4>
+            <p>The predicted <code>a</code> (Green-Red) and <code>b</code> (Blue-Yellow) channels are upscaled to full resolution, merged with original <strong>L</strong>, and converted back to RGB.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <p>Built with Python, OpenCV <code>cv2.dnn</code>, Flask &amp; Caffe Pre-trained Model &bull; Machine Learning Projects</p>
+    </footer>
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
